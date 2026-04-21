@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\AIController;
+use App\Http\Controllers\Api\UploadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,8 +21,8 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
-Route::get('/auth/employers/list', [AuthController::class, 'getEmployers']);
-Route::get('/auth/employers/profile/{id}', [AuthController::class, 'getEmployer']);
+Route::get('/auth/employers', [AuthController::class, 'getEmployers']);
+Route::get('/auth/employers/{id}', [AuthController::class, 'getEmployer']);
 
 Route::get('/listings', [JobController::class, 'index']);
 Route::get('/listings/recommendations', [JobController::class, 'recommendations']);
@@ -77,6 +78,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // AI
     Route::post('/ai/analyze', [AIController::class, 'analyzeCV']);
     Route::post('/ai/suggest-skills', [AIController::class, 'suggestSkills']);
+
+    // Uploads
+    Route::post('/upload/avatar', [UploadController::class, 'uploadAvatar']);
+    Route::post('/upload/cv', [UploadController::class, 'uploadCV']);
+    Route::post('/upload/general', [UploadController::class, 'uploadGeneral']);
 
     // Admin
     Route::middleware('can:admin')->group(function () {

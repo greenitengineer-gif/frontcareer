@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { fetcher } from '../../../utils/api';
 import { useAuth } from '../../../context/AuthContext';
-import { supabase } from '../../../utils/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -133,9 +132,8 @@ export default function EmployerEditPage() {
     }
   }, [user, router]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+  const handleImageUpload = async (file: File, type: 'avatar' | 'banner') => {
+    if (!user) return;
 
     // Check file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
@@ -145,23 +143,23 @@ export default function EmployerEditPage() {
 
     setUploading(type);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `employers/${user.id}/${type}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
 
-      // Upload to 'uploads' bucket
-      const { data, error: uploadError } = await supabase.storage
-        .from('uploads')
-        .upload(filePath, file, { upsert: true });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formDataUpload,
+      });
 
-      if (uploadError) throw uploadError;
+      if (!response.ok) {
+        throw new Error('Файл хуулахад алдаа гарлаа');
+      }
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('uploads')
-        .getPublicUrl(filePath);
-
-      setFormData(prev => ({ ...prev, [type]: publicUrl }));
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, [type]: data.url }));
       toast.success('Зураг амжилттай хуулагдлаа');
     } catch (error: any) {
       console.error('Error uploading:', error);
@@ -406,7 +404,7 @@ export default function EmployerEditPage() {
                           <input 
                             type="file" 
                             accept="image/*"
-                            onChange={(e) => handleFileUpload(e, 'banner')}
+                            onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, 'banner'); }}
                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                           />
                         </div>
@@ -437,7 +435,7 @@ export default function EmployerEditPage() {
                           <input 
                             type="file" 
                             accept="image/*"
-                            onChange={(e) => handleFileUpload(e, 'avatar')}
+                            onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file, 'avatar'); }}
                             className="absolute inset-0 opacity-0 cursor-pointer z-40"
                           />
                         </div>

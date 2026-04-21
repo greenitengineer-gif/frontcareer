@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { fetcher } from '@/utils/api';
-import { supabase } from '@/utils/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -46,38 +45,23 @@ export default function ProfileEditPage() {
 
     setUploading(true);
     try {
-      let { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        try {
-          await supabase.auth.refreshSession();
-        } catch {
-          // ignore
-        }
-        sessionData = (await supabase.auth.getSession()).data;
-      }
-      if (!sessionData.session) {
-        toast.error('Зураг upload хийхийн тулд нэвтэрсэн байх шаардлагатай');
-        return;
-      }
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `avatars/${user.id}/${Date.now()}.${fileExt || 'png'}`;
-      const { error } = await supabase.storage.from('uploads').upload(fileName, file, {
-        upsert: true,
-        contentType: file.type || undefined,
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formDataUpload,
       });
-      if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName);
-      setFormData(prev => ({ ...prev, avatar: publicUrl }));
-
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { ...(user.user_metadata || {}), avatar: publicUrl },
-      });
-      if (!updateError) {
-        await refreshUser();
+      if (!response.ok) {
+        throw new Error('Файл хуулахад алдаа гарлаа');
       }
 
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, avatar: data.url }));
       toast.success('Зураг амжилттай хуулагдлаа');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Зураг хуулахад алдаа гарлаа';
@@ -96,22 +80,7 @@ export default function ProfileEditPage() {
         method: 'PUT',
         body: JSON.stringify(formData),
       });
-
-      if (user) {
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: {
-            ...(user.user_metadata || {}),
-            name: formData.name,
-            phone: formData.phone,
-            avatar: formData.avatar,
-          },
-        });
-        if (!updateError) {
-          await refreshUser();
-        }
-      } else {
-        await refreshUser();
-      }
+      await refreshUser();
       toast.success('Профайл амжилттай шинэчлэгдлээ');
       router.push('/dashboard');
     } catch (error) {

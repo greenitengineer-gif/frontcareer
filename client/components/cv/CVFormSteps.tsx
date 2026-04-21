@@ -157,12 +157,23 @@ export default function CVFormSteps() {
     if (!file) return;
     setImageUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `cv/${user?.id || 'anon'}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('uploads').upload(fileName, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(fileName);
-      updateResumeData({ image: publicUrl });
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formDataUpload,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      updateResumeData({ image: data.url });
       toast.success('Photo updated');
     } catch (err) {
       toast.error('Upload failed');

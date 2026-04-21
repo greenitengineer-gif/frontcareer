@@ -78,14 +78,17 @@ class AuthController extends Controller
 
     public function getEmployer($id)
     {
-        $employer = User::where('id', $id)
-            ->where('user_type', 'employer')
-            ->withCount(['jobs', 'followers'])
-            ->first();
+        $employer = User::find($id);
 
         if (!$employer) {
-            return response()->json(['message' => 'Employer not found'], 404);
+            return response()->json(['message' => 'Хэрэглэгч олдсонгүй'], 404);
         }
+
+        if ($employer->user_type !== 'employer') {
+            return response()->json(['message' => 'Энэ хэрэглэгч байгууллага биш байна'], 404);
+        }
+
+        $employer->loadCount(['jobs', 'followers']);
 
         $isFollowing = false;
         if (auth('sanctum')->check()) {
