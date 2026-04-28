@@ -99,11 +99,35 @@ return new class extends Migration
             $table->string('institution');
             $table->string('degree')->nullable();
             $table->string('field_of_study')->nullable();
-            $table->date('start_date')->nullable();
+            $table->date('start_date');
             $table->date('end_date')->nullable();
+            $table->boolean('is_current')->default(false);
             $table->text('description')->nullable();
             $table->foreign('cv_id')->references('id')->on('cvs')->onDelete('cascade');
             $table->timestamps();
+        });
+
+        // Cache Tables
+        Schema::create('cache', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->mediumText('value');
+            $table->integer('expiration');
+        });
+
+        Schema::create('cache_locks', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->integer('expiration');
+        });
+
+        // Sessions Table
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
         });
 
         Schema::create('experience', function (Blueprint $table) {
@@ -228,6 +252,9 @@ return new class extends Migration
         Schema::dropIfExists('messages');
         Schema::dropIfExists('favorites');
         Schema::dropIfExists('jobs');
-        // Schema::dropIfExists('users');
+        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('cache_locks');
+        Schema::dropIfExists('cache');
+        Schema::dropIfExists('users');
     }
 };
