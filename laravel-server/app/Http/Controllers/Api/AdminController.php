@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\User;
 use App\Models\Message;
+use App\Models\AdminRequest;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -18,6 +19,28 @@ class AdminController extends Controller
             'verifiedSellersCount' => User::where('is_verified', true)->count(),
             'messagesCount' => Message::count(),
         ]);
+    }
+
+    public function getPendingRequests()
+    {
+        $requests = AdminRequest::where('status', 'pending')
+            ->orderBy('requested_at', 'desc')
+            ->get();
+        return response()->json($requests);
+    }
+
+    public function approveRequest($userId)
+    {
+        $request = AdminRequest::where('user_id', $userId)->firstOrFail();
+        $request->update([
+            'status' => 'approved',
+            'approved_at' => now(),
+        ]);
+
+        $user = User::findOrFail($userId);
+        $user->update(['is_admin' => true]);
+
+        return response()->json(['message' => 'Request approved']);
     }
 
     public function getListings(Request $request)

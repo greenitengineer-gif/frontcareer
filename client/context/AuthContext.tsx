@@ -12,6 +12,7 @@ export interface User {
   avatar?: string;
   user_type: 'candidate' | 'employer';
   is_admin: boolean;
+  created_at: string;
   user_metadata?: any; // For compatibility
 }
 

@@ -38,7 +38,6 @@ import { toast } from 'sonner';
 
 import { generateAISummary, suggestSkills } from '@/utils/ai-helpers';
 import { useState } from 'react';
-import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/context/AuthContext';
 
 import { Switch } from '@/components/ui/switch';

@@ -30,7 +30,6 @@ import { Skeleton } from '../../components/ui/skeleton';
 import JobCard from '../../components/JobCard';
 import { Job, JobApplication } from '../../types';
 import { fetcher } from '../../utils/api';
-import { supabase } from '../../utils/supabase';
 
 export default function ProfilePage() {
   const { user, loading: authLoading, logout } = useAuth();
@@ -74,13 +73,7 @@ export default function ProfilePage() {
       setAdminRequestError(null);
 
       try {
-        const { data, error } = await supabase
-          .from('admin_requests')
-          .select('status, requested_at')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (error) throw error;
+        const data = await fetcher('/admin-requests/me');
         setAdminRequest(data);
       } catch (e: any) {
         setAdminRequestError(e?.message || 'Failed to load admin request');
@@ -100,26 +93,9 @@ export default function ProfilePage() {
     const user_metadata = user.user_metadata || {};
 
     try {
-      await supabase.from('admin_requests').upsert(
-        {
-          user_id: user.id,
-          user_name: user_metadata.name || '',
-          user_email: user.email || '',
-          user_phone: user_metadata.phone || null,
-          user_avatar: user_metadata.avatar || null,
-          status: 'pending',
-          requested_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
-
-      const { data, error } = await supabase
-        .from('admin_requests')
-        .select('status, requested_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
+      const data = await fetcher('/admin-requests', {
+        method: 'POST'
+      });
       setAdminRequest(data);
     } catch (e: any) {
       setAdminRequestError(e?.message || 'Failed to submit admin request');

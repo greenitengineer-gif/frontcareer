@@ -37,7 +37,6 @@ import { Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { fetcher } from '@/utils/api';
 import { Resume, CVTemplate } from '@/types/cv';
-import { supabase } from '@/utils/supabase';
 import { calculateCVCompleteness } from '@/lib/cv-utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -314,18 +313,9 @@ function CVBuilderContent() {
 
     try {
       if (user) {
-        const fullName = `${updatedCV.firstName || ''} ${updatedCV.lastName || ''}`.trim();
-        const nextMetadata = {
-          ...(user.user_metadata || {}),
-          ...(fullName ? { name: fullName } : {}),
-          ...(updatedCV.phone ? { phone: updatedCV.phone } : {}),
-          ...(updatedCV.jobTitle ? { jobTitle: updatedCV.jobTitle } : {}),
-          ...(updatedCV.image ? { avatar: updatedCV.image } : {}),
-        };
-        const { error } = await supabase.auth.updateUser({ data: nextMetadata });
-        if (!error) {
-          await refreshUser();
-        }
+        // TODO: Implement Laravel endpoint for updating user profile if needed
+        // For now, we just refresh the user state
+        await refreshUser();
       }
 
       const payload = {

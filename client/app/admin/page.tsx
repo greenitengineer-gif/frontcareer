@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { fetcher } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { Job as Listing } from '../../types';
-import { supabase } from '../../utils/supabase';
 
 type AdminStats = {
   listingsCount: number;
@@ -34,16 +33,8 @@ export default function AdminDashboardPage() {
       setCheckingAdmin(true);
       setError(null);
       try {
-        // Admin access is granted when the user has an approved `admin_requests` row.
-        const { data: adminReq, error: adminReqError } = await supabase
-          .from('admin_requests')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('status', 'approved')
-          .maybeSingle();
-
-        if (adminReqError) throw adminReqError;
-        const approved = !!adminReq;
+        // Use user.is_admin directly from auth context
+        const approved = user.is_admin;
         setIsAdmin(approved);
 
         if (!approved) return;
@@ -53,18 +44,12 @@ export default function AdminDashboardPage() {
         setLoadingRequests(true);
 
         const [pending, statsData, listingsData] = await Promise.all([
-          supabase
-            .from('admin_requests')
-            .select('user_id,user_name,user_email,user_avatar,requested_at')
-            .eq('status', 'pending')
-            .order('requested_at', { ascending: false })
-            .limit(50),
+          fetcher('/admin/requests'),
           fetcher('/admin/stats'),
           fetcher('/admin/listings?limit=12'),
         ]);
 
-        if (pending.error) throw pending.error;
-        setPendingRequests(pending.data || []);
+        setPendingRequests(pending || []);
         setStats(statsData);
         setListings(listingsData);
       } catch (e: any) {
@@ -85,24 +70,13 @@ export default function AdminDashboardPage() {
     if (!ok) return;
 
     try {
-      await supabase
-        .from('admin_requests')
-        .update({
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
+      await fetcher(`/admin/requests/${userId}/approve`, {
+        method: 'POST'
+      });
 
       // Refresh pending list only.
-      const pending = await supabase
-        .from('admin_requests')
-        .select('user_id,user_name,user_email,user_avatar,requested_at')
-        .eq('status', 'pending')
-        .order('requested_at', { ascending: false })
-        .limit(50);
-
-      if (pending.error) throw pending.error;
-      setPendingRequests(pending.data || []);
+      const pending = await fetcher('/admin/requests');
+      setPendingRequests(pending || []);
     } catch (e: any) {
       setError(e?.message || 'Failed to approve request');
     }

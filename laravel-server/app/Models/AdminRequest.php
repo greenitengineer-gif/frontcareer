@@ -2,16 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class AdminRequest extends Model
 {
     use HasFactory;
-
-    protected $primaryKey = 'user_id';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
         'user_id',
@@ -22,17 +18,15 @@ class AdminRequest extends Model
         'status',
         'requested_at',
         'approved_at',
-        'decided_at',
     ];
 
     protected $casts = [
         'requested_at' => 'datetime',
         'approved_at' => 'datetime',
-        'decided_at' => 'datetime',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 }

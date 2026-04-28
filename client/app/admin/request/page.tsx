@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../../context/AuthContext';
-import { supabase } from '../../../utils/supabase';
+import { fetcher } from '../../../utils/api';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
@@ -33,13 +33,7 @@ export default function AdminRequestPage() {
       setError(null);
 
       try {
-        const { data, error } = await supabase
-          .from('admin_requests')
-          .select('status, requested_at, approved_at')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (error) throw error;
+        const data = await fetcher('/admin-requests/me');
         setRequest(data as any);
       } catch (e: any) {
         setError(e?.message || 'Failed to load admin request');
@@ -67,26 +61,9 @@ export default function AdminRequestPage() {
     const user_metadata = (user as any).user_metadata || {};
 
     try {
-      await supabase.from('admin_requests').upsert(
-        {
-          user_id: user.id,
-          user_name: user_metadata.name || '',
-          user_email: user.email || '',
-          user_phone: user_metadata.phone || null,
-          user_avatar: user_metadata.avatar || null,
-          status: 'pending',
-          requested_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
-
-      const { data, error } = await supabase
-        .from('admin_requests')
-        .select('status, requested_at, approved_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
+      const data = await fetcher('/admin-requests', {
+        method: 'POST'
+      });
       setRequest(data as any);
     } catch (e: any) {
       setError(e?.message || 'Failed to submit admin request');

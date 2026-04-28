@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\AIController;
 use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\AdminRequestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,6 +76,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/favorites', [FavoriteController::class, 'store']);
     Route::delete('/favorites/{id}', [FavoriteController::class, 'destroy']);
 
+    // Admin Requests
+    Route::get('/admin-requests/me', [AdminRequestController::class, 'show']);
+    Route::post('/admin-requests', [AdminRequestController::class, 'store']);
+
     // AI
     Route::post('/ai/analyze', [AIController::class, 'analyzeCV']);
     Route::post('/ai/suggest-skills', [AIController::class, 'suggestSkills']);
@@ -89,5 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/stats', [AdminController::class, 'getStats']);
         Route::get('/admin/listings', [AdminController::class, 'getListings']);
         Route::delete('/admin/listings/{id}', [AdminController::class, 'deleteListing']);
+        Route::get('/admin/requests', [AdminController::class, 'getPendingRequests']);
+        Route::post('/admin/requests/{userId}/approve', [AdminController::class, 'approveRequest']);
     });
 });
