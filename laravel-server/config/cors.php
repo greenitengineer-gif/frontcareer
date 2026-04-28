@@ -12,7 +12,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://career.unetei.net', 'http://localhost:3000'],
+    'allowed_origins' => [
+        'https://career.unetei.net',
+        'https://www.career.unetei.net',
+        'http://localhost:3000'
+    ],
 
     'allowed_origins_patterns' => [],
 

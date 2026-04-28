@@ -1,16 +1,20 @@
 const getApiUrl = () => {
+  // 1. Priority: Environment variable (works in build and runtime if set)
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+    return process.env.NEXT_PUBLIC_API_URL.endsWith('/') 
+      ? process.env.NEXT_PUBLIC_API_URL.slice(0, -1) 
+      : process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Fallback logic for production if env is missing during build
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'career.unetei.net') {
-      return 'https://careerback.unetei.net/api';
-    }
+  // 2. Fallback for production domains (both client and server side)
+  // We check the environment to see if we're likely in production
+  const isProd = process.env.NODE_ENV === 'production';
+  
+  if (isProd) {
+    return 'https://careerback.unetei.net/api';
   }
 
+  // 3. Final fallback for local development
   return 'http://127.0.0.1:8000/api';
 };
 
