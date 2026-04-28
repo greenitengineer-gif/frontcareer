@@ -1,20 +1,22 @@
 const getApiUrl = () => {
-  // 1. Priority: Environment variable (works in build and runtime if set)
+  // 1. Клиент талд (Browser) домайн нэрийг шууд шалгах - Энэ нь хамгийн найдвартай
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'career.unetei.net' || window.location.hostname === 'www.career.unetei.net') {
+      return 'https://careerback.unetei.net/api';
+    }
+  }
+
+  // 2. ENV хувьсагч байгаа эсэхийг шалгах
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.endsWith('/') 
-      ? process.env.NEXT_PUBLIC_API_URL.slice(0, -1) 
-      : process.env.NEXT_PUBLIC_API_URL;
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
   }
   
-  // 2. Fallback for production domains (both client and server side)
-  // We check the environment to see if we're likely in production
-  const isProd = process.env.NODE_ENV === 'production';
-  
-  if (isProd) {
+  // 3. NODE_ENV шалгах
+  if (process.env.NODE_ENV === 'production') {
     return 'https://careerback.unetei.net/api';
   }
 
-  // 3. Final fallback for local development
+  // 4. Local fallback
   return 'http://127.0.0.1:8000/api';
 };
 
