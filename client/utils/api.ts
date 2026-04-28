@@ -1,4 +1,20 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+const getApiUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // Fallback logic for production if env is missing during build
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'career.unetei.net') {
+      return 'https://careerback.unetei.net/api';
+    }
+  }
+
+  return 'http://127.0.0.1:8000/api';
+};
+
+const API_URL = getApiUrl();
 
 export const fetcher = async (url: string, options: RequestInit = {}) => {
   let token: string | null = null;
