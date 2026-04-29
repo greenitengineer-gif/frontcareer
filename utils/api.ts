@@ -42,7 +42,7 @@ export const fetcher = async (url: string, options: RequestInit = {}) => {
   });
   const duration = Date.now() - start;
   if (duration > 1000) {
-    console.warn(`[API] Very slow request: ${url} took ${duration}ms`);
+    console.log(`[API] Slow request: ${url} took ${duration}ms`);
   }
 
 
